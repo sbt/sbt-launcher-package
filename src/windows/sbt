@@ -1,5 +1,9 @@
 #!/bin/sh
 # sbt launcher script for Cygwin and MSYS
+#
+# Envioronment:
+# JAVA_HOME - location of a JDK home dir (mandatory)
+# SBT_OPTS  - JVM options (optional)
 
 if [ -z "$JAVA_HOME" ]; then
 JAVA_CMD=java
@@ -7,7 +11,9 @@ else
 JAVA_CMD=$JAVA_HOME/bin/java
 fi
 
-JAVA_OPTS=-Xmx512M
+if [ -z "$JAVA_OPTS" ]; then
+  JAVA_OPTS="-Xmx512M -XX:MaxPermSize=256m -XX:ReservedCodeCacheSize=128m"
+fi
 
 UDIR=`dirname "$0"`
 if [ -z "$MSYSTEM" ]; then
@@ -19,9 +25,9 @@ fi
 if [ "_$TERM" = "_xterm" ]; then
   # Let the terminal handle ANSI sequences
   stty -icanon min 1 -echo > /dev/null 2>&1
-  "$JAVA_CMD" $JAVA_OPTS -Djline.terminal=jline.UnixTerminal -jar "$WDIR/sbt-launch.jar" "$@"
+  "$JAVA_CMD" $JAVA_OPTS -Djline.terminal=jline.UnixTerminal $SBT_OPTS -jar "$WDIR/sbt-launch.jar" "$@"
   stty icanon echo > /dev/null 2>&1
 else
   # Use Jansi to intercept ANSI sequences
-  "$JAVA_CMD" $JAVA_OPTS -Dsbt.log.format=true -cp "$WDIR/jansi.jar;$WDIR/sbt-launch.jar;$WDIR/classes" SbtJansiLaunch "$@"
+  "$JAVA_CMD" $JAVA_OPTS -Dsbt.log.format=true $SBT_OPTS -cp "$WDIR/jansi.jar;$WDIR/sbt-launch.jar;$WDIR/classes" SbtJansiLaunch "$@"
 fi
