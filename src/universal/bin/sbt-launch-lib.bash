@@ -80,7 +80,9 @@ addDebugger () {
 # a ham-fisted attempt to move some memory settings in concert
 # so they need not be dorked around with individually.
 get_mem_opts () {
-  local mem=${1:-1024}
+  local mem="$1"
+  [[ -z "$mem" ]] && return 0
+
   local perm=$(( $mem / 4 ))
   (( $perm > 256 )) || perm=256
   (( $perm < 1024 )) || perm=1024
