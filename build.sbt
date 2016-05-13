@@ -12,7 +12,9 @@ val sbtLaunchJarUrl = SettingKey[String]("sbt-launch-jar-url")
 val sbtLaunchJarLocation = SettingKey[File]("sbt-launch-jar-location")  
 val sbtLaunchJar = TaskKey[File]("sbt-launch-jar", "Resolves SBT launch jar")
 val moduleID = Def.setting {
-  ModuleID(organization.value, "sbt", version.value)
+  ModuleID(organization.value, "sbt",
+    if (isExperimental) sbtVersionToRelease
+    else version.value)
 }
 
 val bintrayLinuxPattern = "[module]/[revision]/[module]-[revision].[ext]"
@@ -93,7 +95,7 @@ val root = (project in file(".")).
 
     // WINDOWS SPECIFIC
     name in Windows := "sbt",
-    windowsBuildId := 1,
+    windowsBuildId := 4,
     version in Windows := {
       val bid = windowsBuildId.value
       val sv = sbtVersionToRelease
