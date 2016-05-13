@@ -11,7 +11,9 @@ lazy val isExperimental = (sbtVersionToRelease contains "RC") || (sbtVersionToRe
 val sbtLaunchJarUrl = SettingKey[String]("sbt-launch-jar-url")
 val sbtLaunchJarLocation = SettingKey[File]("sbt-launch-jar-location")  
 val sbtLaunchJar = TaskKey[File]("sbt-launch-jar", "Resolves SBT launch jar")
-val moduleID = (organization) apply { (o) => ModuleID(o, "sbt", sbtVersionToRelease) }
+val moduleID = Def.setting {
+  ModuleID(organization.value, "sbt", version.value)
+}
 
 val bintrayLinuxPattern = "[module]/[revision]/[module]-[revision].[ext]"
 val bintrayGenericPattern = "[module]/[revision]/[module]/[revision]/[module]-[revision].[ext]"
@@ -64,7 +66,7 @@ val root = (project in file(".")).
     },
     // DEBIAN SPECIFIC
     name in Debian := "sbt",
-    version in Debian := sbtVersionToRelease,
+    version in Debian := (version in Rpm).value,
     debianPackageDependencies in Debian ++= Seq("java6-runtime-headless", "bash (>= 2.05a-11)"),
     debianPackageRecommends in Debian += "git",
     linuxPackageMappings in Debian <+= (sourceDirectory) map { bd =>
@@ -83,7 +85,7 @@ val root = (project in file(".")).
       else stable
     },
     rpmRelease := "1",
-    rpmVendor := "typesafe",
+    rpmVendor := "lightbend",
     rpmUrl := Some("http://github.com/sbt/sbt-launcher-package"),
     rpmLicense := Some("BSD"),
     rpmRequirements :=Seq("java","java-devel","jpackage-utils"),
@@ -92,13 +94,16 @@ val root = (project in file(".")).
     // WINDOWS SPECIFIC
     name in Windows := "sbt",
     windowsBuildId := 1,
-    version in Windows <<= (windowsBuildId) apply { (bid) =>
+    version in Windows := {
+      val bid = windowsBuildId.value
       val sv = sbtVersionToRelease
-      (sv split "[^\\d]" filterNot (_.isEmpty)) match {
+      val wv = (sv split "[^\\d]" filterNot (_.isEmpty)) match {
         case Array(major,minor,bugfix, _*) => Seq(major, minor, bugfix, bid.toString) mkString "."
         case Array(major,minor) => Seq(major, minor, "0", bid.toString) mkString "."
         case Array(major) => Seq(major, "0", "0", bid.toString) mkString "."
       }
+      if (isExperimental) (version in Rpm).value
+      else wv
     },
     maintainer in Windows := "Lightbend, Inc.",
     packageSummary in Windows := "sbt " + (version in Windows).value,
@@ -113,13 +118,10 @@ val root = (project in file(".")).
     mappings in Universal <+= sbtLaunchJar map { _ -> "bin/sbt-launch.jar" },
 
     // Misccelaneous publishing stuff...
-    projectID in Debian    <<= moduleID,
-    projectID in Windows := {
-      val m = moduleID.value
-      m.copy(revision = (version in Windows).value)
-    },
-    projectID in Rpm       <<= moduleID,
-    projectID in Universal <<= moduleID
+    inConfig(Debian)((projectID := moduleID.value) :: Nil),
+    inConfig(Windows)((projectID := moduleID.value) :: Nil),
+    inConfig(Rpm)((projectID := moduleID.value) :: Nil),
+    inConfig(Universal)((projectID := moduleID.value) :: Nil)
   )
 
 def downloadUrlForVersion(v: String) = (v split "[^\\d]" flatMap (i => catching(classOf[Exception]) opt (i.toInt))) match {
