@@ -128,7 +128,6 @@ process_args () {
 
        -sbt-jar) require_arg path "$1" "$2" && sbt_jar="$2" && shift 2 ;;
    -sbt-version) require_arg version "$1" "$2" && sbt_version="$2" && shift 2 ;;
-     -java-home) require_arg path "$1" "$2" && java_cmd="$2/bin/java" && shift 2 ;;
 
             -D*) addJava "$1" && shift ;;
             -J*) addJava "${1:2}" && shift ;;
@@ -153,17 +152,16 @@ checkJava() {
   if [[ "$java_version" == "" ]]; then
     echo
     echo No java installations was detected.
-    echo Please go to http://www.java.com/getjava/ and download
+    echo Please go to http://www.azul.com/downloads/zulu/
     echo
     exit 1
   elif [[ ! "$java_version" > "$required_version" ]]; then
     echo
     echo The java installation you have is not up to date
-    echo $script_name requires at least version $required_version+, you have
+    echo sbt requires at least version $required_version+, you have
     echo version $java_version
     echo
-    echo Please go to http://www.java.com/getjava/ and download
-    echo a valid Java Runtime and install before running $script_name.
+    echo Please go to http://www.azul.com/downloads/zulu/
     echo
     exit 1
   fi
@@ -195,7 +193,7 @@ run() {
 
   # run sbt
   execRunner "$java_cmd" \
-    $(get_mem_opts $sbt_mem) \
+    $(get_mem_opts) \
     ${JAVA_OPTS} \
     ${SBT_OPTS:-$default_sbt_opts} \
     ${java_args[@]} \

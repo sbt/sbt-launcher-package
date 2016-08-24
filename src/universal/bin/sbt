@@ -63,11 +63,12 @@ cygwinpath() {
 declare -r noshare_opts="-Dsbt.global.base=project/.sbtboot -Dsbt.boot.directory=project/.boot -Dsbt.ivy.home=project/.ivy"
 declare -r sbt_opts_file=".sbtopts"
 declare -r etc_sbt_opts_file="${sbt_home}/conf/sbtopts"
-declare -r win_sbt_opts_file="${sbt_home}/conf/sbtconfig.txt"
+
+declare -r jvm_opts_file=".jvmopts"
 
 usage() {
  cat <<EOM
-Usage: $script_name [options]
+Usage: sbt [options]
 
   -h | -help         print this message
   -v | -verbose      this runner is chattier
@@ -77,7 +78,7 @@ Usage: $script_name [options]
   -sbt-dir   <path>  path to global settings/plugins directory (default: ~/.sbt)
   -sbt-boot  <path>  path to shared boot directory (default: ~/.sbt/boot in 0.11 series)
   -ivy       <path>  path to local Ivy repository (default: ~/.ivy2)
-  -mem    <integer>  set memory options (default: $sbt_mem, which is $(get_mem_opts $sbt_mem))
+  -mem    <integer>  set memory options (default: $(get_mem_opts))
   -no-share          use all local caches; no sharing
   -no-global         uses global caches, but does not use global ~/.sbt directory.
   -jvm-debug <port>  Turn on JVM debugging, open at the given port.
@@ -89,14 +90,13 @@ Usage: $script_name [options]
   -sbt-rc                   use an RC version of sbt
   -sbt-snapshot             use a snapshot version of sbt
 
-  # java version (default: java from PATH, currently $(java -version 2>&1 | grep version))
-  -java-home <path>         alternate JAVA_HOME
-
   # jvm options and output control
   JAVA_OPTS          environment variable, if unset uses "$java_opts"
+  .jvmopts           if this file exists in the current directory, its contents
+                     are appended to JAVA_OPTS
   SBT_OPTS           environment variable, if unset uses "$default_sbt_opts"
-  .sbtopts           if this file exists in the current directory, it is
-                     prepended to the runner args
+  .sbtopts           if this file exists in the current directory, its contents
+                     are prepended to the runner args
   /etc/sbt/sbtopts   if this file exists, it is prepended to the runner args
   -Dkey=val          pass -Dkey=val directly to the java runtime
   -J-X               pass option -X directly to the java runtime 
@@ -137,16 +137,14 @@ loadConfigFile() {
   done
 }
 
-# TODO - Pull in config based on operating system... (MSYS + cygwin should pull in txt file).
 # Here we pull in the global settings configuration.
 [[ -f "$etc_sbt_opts_file" ]] && set -- $(loadConfigFile "$etc_sbt_opts_file") "$@"
-# -- Windows behavior stub'd
-# JAVA_OPTS=$(cat "$WDIR/sbtconfig.txt" | sed -e 's/\r//g' -e 's/^#.*$//g' | sed ':a;N;$!ba;s/\n/ /g')
-
 
 #  Pull in the project-level config file, if it exists.
 [[ -f "$sbt_opts_file" ]] && set -- $(loadConfigFile "$sbt_opts_file") "$@"
 
+#  Pull in the project-level java config, if it exists.
+[[ -f "$jvm_opts_file" ]] && JAVA_OPTS="$JAVA_OPTS $(loadConfigFile $jvm_opts_file)"
 
 run "$@"
 
