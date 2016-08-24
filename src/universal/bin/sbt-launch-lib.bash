@@ -158,7 +158,7 @@ checkJava() {
   elif [[ ! "$java_version" > "$required_version" ]]; then
     echo
     echo The java installation you have is not up to date
-    echo $script_name requires at least version $required_version+, you have
+    echo sbt requires at least version $required_version+, you have
     echo version $java_version
     echo
     echo Please go to http://www.azul.com/downloads/zulu/
@@ -193,7 +193,7 @@ run() {
 
   # run sbt
   execRunner "$java_cmd" \
-    $(get_mem_opts $sbt_mem) \
+    $(get_mem_opts) \
     ${JAVA_OPTS} \
     ${SBT_OPTS:-$default_sbt_opts} \
     ${java_args[@]} \

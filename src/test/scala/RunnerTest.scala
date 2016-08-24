@@ -24,7 +24,7 @@ object SbtRunnerTest extends Specification {
   
   val singles = """
 sbt -v -d -no-colors update package
-sbt -verbose -210 -debug -ivy /tmp update
+sbt -verbose -debug -ivy /tmp update
 """.trim.lines
 
   import scala.sys.process._
