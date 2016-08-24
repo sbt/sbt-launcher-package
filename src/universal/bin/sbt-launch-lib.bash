@@ -153,7 +153,7 @@ checkJava() {
   if [[ "$java_version" == "" ]]; then
     echo
     echo No java installations was detected.
-    echo Please go to http://www.java.com/getjava/ and download
+    echo Please go to http://www.azul.com/downloads/zulu/
     echo
     exit 1
   elif [[ ! "$java_version" > "$required_version" ]]; then
@@ -162,8 +162,7 @@ checkJava() {
     echo $script_name requires at least version $required_version+, you have
     echo version $java_version
     echo
-    echo Please go to http://www.java.com/getjava/ and download
-    echo a valid Java Runtime and install before running $script_name.
+    echo Please go to http://www.azul.com/downloads/zulu/
     echo
     exit 1
   fi
