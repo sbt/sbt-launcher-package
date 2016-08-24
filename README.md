@@ -67,9 +67,6 @@ Current -help output:
       -scala-home <path>        use the scala build at the specified directory
       -scala-version <version>  use the specified version of scala
 
-      # java version (default: java from PATH, currently java version "1.6.0_29")
-      -java-home <path>         alternate JAVA_HOME
-
       # jvm options and output control
       JAVA_OPTS     environment variable, if unset uses "-Dfile.encoding=UTF8"
       SBT_OPTS      environment variable, if unset uses "-XX:+CMSClassUnloadingEnabled"

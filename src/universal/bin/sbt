@@ -91,9 +91,6 @@ Usage: $script_name [options]
   -sbt-rc                   use an RC version of sbt
   -sbt-snapshot             use a snapshot version of sbt
 
-  # java version (default: java from PATH, currently $(java -version 2>&1 | grep version))
-  -java-home <path>         alternate JAVA_HOME
-
   # jvm options and output control
   JAVA_OPTS          environment variable, if unset uses "$java_opts"
   .jvmopts           if this file exists in the current directory, its contents
