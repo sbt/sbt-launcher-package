@@ -78,6 +78,10 @@ val root = (project in file(".")).
       })
       else stable
     },
+    version in Rpm := {
+      val old = (version in Rpm).value
+      old + ".1"
+    },
     rpmRelease := "1",
     rpmVendor := "typesafe",
     rpmUrl := Some("http://github.com/sbt/sbt-launcher-package"),
@@ -113,7 +117,10 @@ val root = (project in file(".")).
       val m = moduleID.value
       m.copy(revision = (version in Windows).value)
     },
-    projectID in Rpm       <<= moduleID,
+    projectID in Rpm := {
+      val m = moduleID.value
+      m.copy(revision = (version in Rpm).value)
+    },
     projectID in Universal <<= moduleID
   )
 
