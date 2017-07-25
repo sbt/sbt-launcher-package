@@ -154,6 +154,8 @@ process_args () {
 
           "-D*") addJava "$1" && shift ;;
             -J*) addJava "${1:2}" && shift ;;
+      test-only) addSbt "testOnly $2" && shift 2 ;;
+     test-quick) addSbt "testQuick $2" && shift 2 ;;
               *) addResidual "$1" && shift ;;
     esac
   done
