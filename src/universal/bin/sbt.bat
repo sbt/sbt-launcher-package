@@ -159,7 +159,7 @@ if /I "%JAVA_VERSION%" GEQ "1.8" (
     if not exist %PRELOAD_SBT_JAR% (
       if exist "%SBT_HOME%\..\lib\local-preloaded\" (
         echo 'about to robocopy'
-        robocopy "%SBT_HOME%\..\lib\local-preloaded" "%UserProfile%\.sbt\preloaded" /E
+        robocopy /NS /NC /NFL /NDL /NP /NJH /NJS "%SBT_HOME%\..\lib\local-preloaded" "%UserProfile%\.sbt\preloaded" /E
       )
     )
   )
