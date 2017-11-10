@@ -113,7 +113,7 @@ if /I %ERRORLEVEL% EQU 0 (set JAVA_VERSION=1.5)
 exit /B 0
 
 :checkjava
-set required_version=1.6
+set required_version=1.8
 if /I "%JAVA_VERSION%" GEQ "%required_version%" (
   exit /B 0
 )

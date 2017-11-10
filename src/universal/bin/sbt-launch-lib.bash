@@ -262,7 +262,7 @@ run() {
   argumentCount=$#
 
   # TODO - java check should be configurable...
-  checkJava "1.6"
+  checkJava "1.8"
 
   # Java 9 support
   copyRt
