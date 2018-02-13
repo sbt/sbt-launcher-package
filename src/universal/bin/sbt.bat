@@ -35,7 +35,8 @@ IF DEFINED JAVA_HOME SET "PATH=%JAVA_HOME%\bin;%PATH%"
 
 rem users can set JAVA_OPTS via .jvmopts (sbt-extras style)
 IF EXIST .jvmopts FOR /F %%A IN (.jvmopts) DO (
-  IF not "%%A:~0,1%"=="#" (
+  SET _jvmopts_line=%%A
+  IF NOT "!_jvmopts_line:~0,1!"=="#" (
     SET JAVA_OPTS=%%A !JAVA_OPTS!
   )
 )
