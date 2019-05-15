@@ -194,7 +194,7 @@ if "%INIT_SBT_VERSION%"=="" (
     SET INIT_SBT_VERSION=%%F
   )
 )
-set PRELOAD_SBT_JAR="%UserProfile%\.sbt\preloaded\org\scala-sbt\sbt\%INIT_SBT_VERSION%\jars\sbt.jar"
+set PRELOAD_SBT_JAR="%UserProfile%\.sbt\preloaded\org\scala-sbt\sbt\%INIT_SBT_VERSION%\"
 if /I %JAVA_VERSION% GEQ 8 (
   where robocopy >nul 2>nul
   if %ERRORLEVEL% equ 0 (
