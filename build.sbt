@@ -32,6 +32,7 @@ lazy val sbt013ExtraDeps = {
   else Seq()
 }
 
+lazy val isWindows: Boolean = sys.props("os.name").toLowerCase(java.util.Locale.ENGLISH).contains("windows")
 lazy val isExperimental = (sbtVersionToRelease contains "RC") || (sbtVersionToRelease contains "M")
 val sbtLaunchJarUrl = SettingKey[String]("sbt-launch-jar-url")
 val sbtLaunchJarLocation = SettingKey[File]("sbt-launch-jar-location")
@@ -353,7 +354,9 @@ lazy val dist = (project in file("dist"))
     exportRepoCsrDirectory := exportRepoDirectory.value,
     exportRepoUsingCoursier := {
       val outDirectory = exportRepoCsrDirectory.value
-      val csr = (baseDirectory in LocalRootProject).value / "bin" / "coursier"
+      val csr =
+        if (isWindows) (baseDirectory in LocalRootProject).value / "bin" / "coursier.bat"
+        else (baseDirectory in LocalRootProject).value / "bin" / "coursier"
       val cache = target.value / "coursier"
       IO.delete(cache)
       val v = sbtVersionToRelease
