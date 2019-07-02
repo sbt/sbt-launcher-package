@@ -6,6 +6,7 @@ init:
 install:
   - ps: |
       iex (new-object net.webclient).downloadstring('https://get.scoop.sh')
+      scoop bucket add java
       scoop install adopt8-hotspot
       scoop install adopt11-hotspot
   - SET JAVA_HOME=C:\jdk8
