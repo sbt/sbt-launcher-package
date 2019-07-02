@@ -8,9 +8,9 @@ install:
       iex (new-object net.webclient).downloadstring('https://get.scoop.sh')
       scoop bucket add java
       scoop install adopt8-hotspot
-      mklink /J C:\jkd8 ~\scoop\apps\adopt8-hotspot\current
       scoop install adopt11-hotspot
-      mklink /J C:\jkd11 ~\scoop\apps\adopt11-hotspot\current
+  - mklink /J C:\jkd8 ~\scoop\apps\adopt8-hotspot\current
+  - mklink /J C:\jkd11 ~\scoop\apps\adopt11-hotspot\current
   - SET JAVA_HOME=C:\jdk8
   - SET PATH=C:\jdk8\bin;%PATH%
   - ps: |
