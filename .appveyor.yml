@@ -4,13 +4,11 @@ init:
   - git config --global core.autocrlf input
 
 install:
-  - cinst adoptopenjdk8
-  - mv "C:\Program Files\AdoptOpenJDK" C:\jdk8
-  - cinst adoptopenjdk11
-  - mv "C:\Program Files\AdoptOpenJDK" C:\jdk11
+  - iex (new-object net.webclient).downloadstring('https://get.scoop.sh')
+  - scoop install adopt8-hotspot
+  - scoop install adopt11-hotspot
   - SET JAVA_HOME=C:\jdk8
   - SET PATH=C:\jdk8\bin;%PATH%
-
   - ps: |
       Add-Type -AssemblyName System.IO.Compression.FileSystem
       if (!(Test-Path -Path "C:\sbt" )) {
