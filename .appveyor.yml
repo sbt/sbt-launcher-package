@@ -4,8 +4,10 @@ init:
   - git config --global core.autocrlf input
 
 install:
-  - cinst jdk8 -params 'installdir=C:\\jdk8'
-  - cinst jdk11 -params 'installdir=C:\\jdk11'
+  - cinst adoptopenjdk8
+  - mv "C:\Program Files\AdoptOpenJDK" C:\jdk8
+  - cinst adoptopenjdk11
+  - mv "C:\Program Files\AdoptOpenJDK" C:\jdk11
   - SET JAVA_HOME=C:\jdk8
   - SET PATH=C:\jdk8\bin;%PATH%
 
