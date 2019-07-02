@@ -4,9 +4,10 @@ init:
   - git config --global core.autocrlf input
 
 install:
-  - iex (new-object net.webclient).downloadstring('https://get.scoop.sh')
-  - scoop install adopt8-hotspot
-  - scoop install adopt11-hotspot
+  - ps: |
+      iex (new-object net.webclient).downloadstring('https://get.scoop.sh')
+      scoop install adopt8-hotspot
+      scoop install adopt11-hotspot
   - SET JAVA_HOME=C:\jdk8
   - SET PATH=C:\jdk8\bin;%PATH%
   - ps: |
