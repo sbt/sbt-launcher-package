@@ -145,14 +145,32 @@ addMemory () {
   local xs=("${java_args[@]}")
   java_args=()
   for i in "${xs[@]}"; do
-    if ! [[ "${i}" == *-Xmx* ]] && ! [[ "${i}" == *-Xms* ]] && ! [[ "${i}" == *-XX:MaxPermSize* ]] && ! [[ "${i}" == *-XX:MaxMetaspaceSize* ]] && ! [[ "${i}" == *-XX:ReservedCodeCacheSize* ]]; then
+    if ! [[ "${i}" == *-Xmx* ]] && \
+        ! [[ "${i}" == *-Xms* ]] && \
+        ! [[ "${i}" == *-XX:MaxPermSize* ]] && \
+        ! [[ "${i}" == *-XX:MaxMetaspaceSize* ]] && \
+        ! [[ "${i}" == *-XX:ReservedCodeCacheSize* ]] && \
+        ! [[ "${i}" == *-XX:+UseCGroupMemoryLimitForHeap* ]] && \
+        ! [[ "${i}" == *-XX:MaxRAM* ]] && \
+        ! [[ "${i}" == *-XX:InitialRAMPercentage* ]] && \
+        ! [[ "${i}" == *-XX:MaxRAMPercentage* ]] && \
+        ! [[ "${i}" == *-XX:MinRAMPercentage* ]] ; then
       java_args+=("${i}")
     fi
   done
   local ys=("${sbt_options[@]}")
   sbt_options=()
   for i in "${ys[@]}"; do
-    if ! [[ "${i}" == *-Xmx* ]] && ! [[ "${i}" == *-Xms* ]] && ! [[ "${i}" == *-XX:MaxPermSize* ]] && ! [[ "${i}" == *-XX:MaxMetaspaceSize* ]] && ! [[ "${i}" == *-XX:ReservedCodeCacheSize* ]]; then
+    if ! [[ "${i}" == *-Xmx* ]] && \
+        ! [[ "${i}" == *-Xms* ]] && \
+        ! [[ "${i}" == *-XX:MaxPermSize* ]] && \
+        ! [[ "${i}" == *-XX:MaxMetaspaceSize* ]] && \
+        ! [[ "${i}" == *-XX:ReservedCodeCacheSize* ]] && \
+        ! [[ "${i}" == *-XX:+UseCGroupMemoryLimitForHeap* ]] && \
+        ! [[ "${i}" == *-XX:MaxRAM* ]] && \
+        ! [[ "${i}" == *-XX:InitialRAMPercentage* ]] && \
+        ! [[ "${i}" == *-XX:MaxRAMPercentage* ]] && \
+        ! [[ "${i}" == *-XX:MinRAMPercentage* ]] ; then
       sbt_options+=("${i}")
     fi
   done
