@@ -381,17 +381,19 @@ if /I "%~0" == "new" (
 )
 
 if /I "%g:~0,2%" == "-D" (
- rem special handling for -D since '=' gets parsed away
- if x%g:^==% == x%g% (
-   if not "%~1" == "" (
-     set SBT_ARGS=!SBT_ARGS! %0=%1
-     shift
-     goto args_loop
-   ) else (
-     echo %g is missing a value
-     goto error
-   )
- )
+  call :dlog [args_loop] detectd -D
+  rem special handling for -D since '=' gets parsed away
+  if x%g:^==% == x%g% (
+    if not "%~1" == "" (
+      call :dlog [args_loop] detectd -D argument %~1
+      set "SBT_ARGS=!SBT_ARGS! %0=%1"
+      shift
+      goto args_loop
+    ) else (
+      echo %g is missing a value
+      goto error
+    )
+  )
 )
 
 rem the %0 (instead of %~0) preserves original argument quoting
