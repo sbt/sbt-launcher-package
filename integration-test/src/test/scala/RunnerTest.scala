@@ -194,6 +194,12 @@ object SbtRunnerTest extends SimpleTestSuite with PowerAssertions {
   test("sbt --jvm-debug <port>") {
     val out = sbtProcess("--jvm-debug", "12345", "compile", "-v").!!.linesIterator.toList
     assert(out.contains[String]("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=12345"))
+  }
+
+  test("sbt new scala/scala-seed.g8 --name=template-test should create a new seed project") {
+    // Quoting the --name= for windows compatability
+    val out = sbtProcess("new scala/scala-seed.g8 \"--name=template-test\"").!
+    assert(out == 0)
     ()
   }
 }
