@@ -9,9 +9,13 @@ declare -a sbt_options
 declare -a print_version
 declare -a print_sbt_version
 declare -a print_sbt_script_version
-declare java_cmd=java
+declare sbt_home
+declare user_home
+declare wsl_mode=auto
+declare java_cmd
 declare java_version
 declare init_sbt_version=_to_be_replaced
+declare sbt_jar
 declare sbt_default_mem=1024
 declare -r default_sbt_opts=""
 declare -r default_java_opts="-Dfile.encoding=UTF-8"
@@ -24,9 +28,7 @@ declare sbt_debug=
 
 # Bash reimplementation of realpath to return the absolute path
 realpathish () {
-(
-  TARGET_FILE="$1"
-  FIX_CYGPATH="$2"
+  local TARGET_FILE="$1"
 
   cd "$(dirname "$TARGET_FILE")"
   TARGET_FILE=$(basename "$TARGET_FILE")
@@ -40,13 +42,28 @@ realpathish () {
     COUNT=$(($COUNT + 1))
   done
 
-  # make sure we grab the actual windows path, instead of cygwin's path.
-  if [[ "x$FIX_CYGPATH" != "x" ]]; then
-    echo "$(cygwinpath "$(pwd -P)/$TARGET_FILE")"
+  echo "$(pwd -P)/$TARGET_FILE"
+}
+
+declare -r sbt_bin_dir="$(dirname "$(realpathish "$0")")"
+
+# Set wsl_mode to "linux" or "win" if set to "auto", or to "none" if not running in WSL
+check_wsl() {
+  if hash wslpath 2>/dev/null; then
+    case "$wsl_mode" in
+      win|linux) ;;
+      auto)
+        case "$(wslpath -w "$sbt_bin_dir")" in
+          \\\\*) wsl_mode=linux ;;
+          *) wsl_mode=win ;;
+        esac
+        ;;
+      *) echo "Illegal WSL mode '$wsl_mode'"; exit 1 ;;
+    esac
   else
-    echo "$(pwd -P)/$TARGET_FILE"
+    wsl_mode=none
   fi
-)
+  vlog "[check_wsl] wsl_mode = '$wsl_mode'"
 }
 
 # Uses uname to detect if we're in the odd cygwin environment.
@@ -63,20 +80,17 @@ is_cygwin() {
 # TODO - Use nicer bash-isms here.
 CYGWIN_FLAG=$(if is_cygwin; then echo true; else echo false; fi)
 
-# This can fix cygwin style /cygdrive paths so we get the
-# windows style paths.
-cygwinpath() {
+# Convert WSL or CygWin paths to Windows paths
+winpath() {
   local file="$1"
-  if [[ "$CYGWIN_FLAG" == "true" ]]; then #"
+  if [[ "$wsl_mode" == "win" ]]; then
+    echo $(wslpath -w $file)
+  elif [[ "$CYGWIN_FLAG" == "true" ]]; then
     echo $(cygpath -w $file)
   else
     echo $file
   fi
 }
-
-
-declare -r sbt_bin_dir="$(dirname "$(realpathish "$0")")"
-declare -r sbt_home="$(dirname "$sbt_bin_dir")"
 
 echoerr () {
   echo 1>&2 "$@"
@@ -89,16 +103,7 @@ dlog () {
 }
 
 jar_file () {
-  echo "$(cygwinpath "${sbt_home}/bin/sbt-launch.jar")"
-}
-
-acquire_sbt_jar () {
-  sbt_jar="$(jar_file)"
-
-  if [[ ! -f "$sbt_jar" ]]; then
-    echoerr "Could not find launcher jar: $sbt_jar"
-    exit 2
-  fi
+  echo "${sbt_home}/bin/sbt-launch.jar"
 }
 
 rt_export_file () {
@@ -224,7 +229,7 @@ is_function_defined() {
 }
 
 # parses JDK version from the -version output line.
-# 8 for 1.8.0_nn, 9 for 9-ea etc, and "no_java" for undetected
+# 8 for 1.8.0_nn, 9 for 9-ea etc, and 0 for undetected
 jdk_version() {
   local result
   local lines=$("$java_cmd" -Xms32M -Xmx32M -version 2>&1 | tr '\r' '\n')
@@ -244,7 +249,7 @@ jdk_version() {
   done
   if [[ -z $result ]]
   then
-    result=no_java
+    result=0
   fi
   echo "$result"
 }
@@ -270,7 +275,7 @@ getPreloaded() {
     "${sbt_opts_array[@]}"
     "${java_opts_array[@]}"
     "${java_args[@]}")
-  local via_global_base="$HOME/.sbt/preloaded"
+  local via_global_base="$user_home/.sbt/preloaded"
   local via_explicit=""
 
   for opt in "${args_to_check[@]}"; do
@@ -307,7 +312,7 @@ checkJava() {
   local required_version="$1"
   # Now check to see if it's a good enough version
   local good_enough="$(expr $java_version ">=" $required_version)"
-  if [[ "$java_version" == "" ]]; then
+  if [[ "$java_version" == "0" ]]; then
     echo
     echo "No Java Development Kit (JDK) installation was detected."
     echo Please go to http://www.oracle.com/technetwork/java/javase/downloads/ and download.
@@ -329,7 +334,7 @@ checkJava() {
 copyRt() {
   local at_least_9="$(expr $java_version ">=" 9)"
   if [[ "$at_least_9" == "1" ]]; then
-    rtexport=$(rt_export_file)
+    rtexport="$(winpath "$(rt_export_file)")"
     # The grep for java9-rt-ext- matches the filename prefix printed in Export.java
     java9_ext=$("$java_cmd" ${sbt_options[@]} ${java_args[@]} \
       -jar "$rtexport" --rt-ext-dir | grep java9-rt-ext-)
@@ -364,13 +369,6 @@ run() {
   # Copy preloaded repo to user's preloaded directory
   syncPreloaded
 
-  # no jar? download it.
-  [[ -f "$sbt_jar" ]] || acquire_sbt_jar "$sbt_version" || {
-    # still no jar? uh-oh.
-    echo "Download failed. Obtain the sbt-launch.jar manually and place it at $sbt_jar"
-    exit 1
-  }
-
   # TODO - java check should be configurable...
   checkJava "6"
 
@@ -384,19 +382,21 @@ run() {
     addJava "-Dsbt.cygwin=true"
   fi
 
+  local sbt_jar_w="$(winpath "$sbt_jar")"
+
   if [[ $print_sbt_version ]]; then
-    execRunner "$java_cmd" -jar "$sbt_jar" "sbtVersion" | tail -1 | sed -e 's/\[info\]//g'
+    execRunner "$java_cmd" -jar "$sbt_jar_w" "sbtVersion" | tail -1 | sed -e 's/\[info\]//g'
   elif [[ $print_sbt_script_version ]]; then
     echo "$init_sbt_version"
   elif [[ $print_version ]]; then
-    execRunner "$java_cmd" -jar "$sbt_jar" "sbtVersion" | tail -1 | sed -e 's/\[info\]/sbt version in this project:/g'
+    execRunner "$java_cmd" -jar "$sbt_jar_w" "sbtVersion" | tail -1 | sed -e 's/\[info\]/sbt version in this project:/g'
     echo "sbt script version: $init_sbt_version"
   else
     # run sbt
     execRunner "$java_cmd" \
       "${java_args[@]}" \
       "${sbt_options[@]}" \
-      -jar "$sbt_jar" \
+      -jar "$sbt_jar_w" \
       "${sbt_commands[@]}" \
       "${residual_args[@]}"
   fi
@@ -453,6 +453,7 @@ Usage: `basename "$0"` [options]
 
   # java version (default: java from PATH, currently $(java -version 2>&1 | grep version))
   --java-home <path>         alternate JAVA_HOME
+  --wsl=auto|win|linux       use Windows JDK or Linux JDK in WSL
 
   # jvm options and output control
   JAVA_OPTS           environment variable, if unset uses "$default_java_opts"
@@ -538,6 +539,7 @@ process_args () {
           --numeric-version) print_sbt_version=1 && shift ;;
            --script-version) print_sbt_script_version=1 && shift ;;
           -d|-debug|--debug) sbt_debug=1 && addSbt "-debug" && shift ;;
+                    --wsl=*) wsl_mode=${1:6} && shift ;;
 
                  -ivy|--ivy) require_arg path "$1" "$2" && addJava "-Dsbt.ivy.home=$2" && shift 2 ;;
                  -mem|--mem) require_arg integer "$1" "$2" && addMemory "$2" && shift 2 ;;
@@ -565,7 +567,21 @@ process_args () {
     process_my_args "${myargs[@]}"
   }
 
+  check_wsl
+
+  # These variables depend on wsl_mode so they cannot be set earlier
+  if [[ "$wsl_mode" == "win" ]]; then
+    user_home="$(wslpath -u "$(cmd.exe /c echo %HOMEDRIVE%%HOMEPATH% | tr '\r' '\n')")"
+    [[ -z "$java_cmd" ]] && java_cmd=java.exe
+  else
+    user_home="$HOME"
+    [[ -z "$java_cmd" ]] && java_cmd=java
+  fi
+  sbt_home="$(dirname "$sbt_bin_dir")"
+  [[ -z "$sbt_jar" ]] && sbt_jar="$(jar_file)"
+
   java_version="$(jdk_version)"
+  vlog "[process_args] user_home = '$user_home'"
   vlog "[process_args] java_version = '$java_version'"
 }
 
