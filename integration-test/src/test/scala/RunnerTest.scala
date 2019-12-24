@@ -8,16 +8,24 @@ object SbtRunnerTest extends SimpleTestSuite with PowerAssertions {
   // 1.3.0, 1.3.0-M4
   private val versionRegEx = "\\d(\\.\\d+){2}(-\\w+)?"
 
+  lazy val isCygwin: Boolean = java.lang.Boolean.getBoolean("test.cygwin")
   lazy val isWindows: Boolean = sys.props("os.name").toLowerCase(java.util.Locale.ENGLISH).contains("windows")
   lazy val sbtScript =
-    if (isWindows) new File("target/universal/stage/bin/sbt.bat")
+    if (isWindows && !isCygwin) new File("target/universal/stage/bin/sbt.bat")
     else new File("target/universal/stage/bin/sbt")
 
+  def cygpath(v: File): String =
+    sbt.internal.Process("""C:\cygwin64\bin\cygpath -u """ + v.getAbsolutePath).!!.trim
+
   def sbtProcess(arg: String) = sbtProcessWithOpts(arg, "", "")
-  def sbtProcessWithOpts(arg: String, javaOpts: String, sbtOpts: String) =
-    sbt.internal.Process(sbtScript.getAbsolutePath + " " + arg, new File("citest"),
+  def sbtProcessWithOpts(arg: String, javaOpts: String, sbtOpts: String) = {
+    val p = if (isCygwin) """C:\cygwin64\bin\bash --login -c "cd """ +
+              cygpath(new File("citest")) + ";" + cygpath(sbtScript) + " " + arg + "\""
+            else sbtScript.getAbsolutePath + " " + arg
+    sbt.internal.Process(p, new File("citest"),
       "JAVA_OPTS" -> javaOpts,
       "SBT_OPTS" -> sbtOpts)
+  }
 
   test("sbt runs") {
     assert(sbtScript.exists)
@@ -131,7 +139,7 @@ object SbtRunnerTest extends SimpleTestSuite with PowerAssertions {
   }
 
   test("sbt with --no-colors in SBT_OPTS") {
-    if (isWindows) cancel("Test not supported on windows")
+    if (isWindows && !isCygwin) cancel("Test not supported on windows")
     val out = sbtProcessWithOpts("compile -v", "", "--no-colors").!!.linesIterator.toList
     assert(out.contains[String]("-Dsbt.log.noformat=true"))
     ()

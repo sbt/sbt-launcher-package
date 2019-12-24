@@ -26,8 +26,10 @@ matrix:
         - curl https://piccolo.link/sbt-1.2.8.zip -L --output /tmp/sbt.zip
         - unzip /tmp/sbt.zip -d $HOME/sbt
         - export PATH="$HOME/sbt/sbt/bin:$PATH"
+        - choco install cygwin --params "/InstallDir:C:\cygwin64"
       script:
         - sbt -Dsbt.build.version=$SBT_VER universal:packageBin universal:stage integrationTest/test
+        - sbt -Dsbt.build.version=$SBT_VER -Dtest.cygwin=true integrationTest/test
         - cd citest
         - "./test.bat"
         - "test3/test3.bat"
@@ -82,6 +84,7 @@ cache:
     - $HOME/.ivy2/cache
     - $HOME/.sbt/boot
     - $HOME/.jabba/jdk
+    - $HOME/AppData/Local/Temp/chocolatey
 
 before_cache:
   - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
