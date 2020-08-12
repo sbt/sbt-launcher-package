@@ -565,6 +565,7 @@ process_args () {
                              shift 2 ;;
 
                   "-D*"|-D*) addJava "$1" && shift ;;
+                        -X*) addJava "$1" && shift ;;
                         -J*) addJava "${1:2}" && shift ;;
                           *) addResidual "$1" && shift ;;
     esac
