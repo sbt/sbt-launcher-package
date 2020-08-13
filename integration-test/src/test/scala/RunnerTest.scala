@@ -69,7 +69,7 @@ object SbtRunnerTest extends SimpleTestSuite with PowerAssertions {
   }
 
   test("sbt -X arguments") {
-    val out = sbtProcess("-Xmx503m", "exit", "-v").!!.linesIterator.toList
+    val out = sbtProcess("compile", "-Xmx503m", "-v").!!.linesIterator.toList
     assert(out.contains[String]("-Xmx503m"))
     assert(!out.contains[String]("-Xmx1024m"))
     ()

@@ -455,8 +455,8 @@ if not "%g:~0,5%" == "-XX:+" if not "%g:~0,5%" == "-XX:-" if "%g:~0,3%" == "-XX"
 )
 
 if "%g:~0,2%" == "-X" (
-  call :dlog [args_loop] -X argument %g%
-  set "SBT_ARGS=!SBT_ARGS! %g%"
+  call :dlog [args_loop] -X argument %~0
+  set "SBT_ARGS=!SBT_ARGS! %~0"
   goto args_loop
 )
 
